@@ -387,8 +387,10 @@ Public Class HariRepository
     Public Sub Eksekusi(h As Hari, mode As String)
         Call KoneksiDb()
         Dim sql As String = ""
+
         If mode = "SIMPAN" Then
-            sql = "INSERT INTO tbl_hari (Nm_Hari) VALUES (@n)"
+            ' PERBAIKAN: Tambahkan Id_Hari ke dalam query agar tidak error di database
+            sql = "INSERT INTO tbl_hari (Id_Hari, Nm_Hari) VALUES (@id, @n)"
         ElseIf mode = "UBAH" Then
             sql = "UPDATE tbl_hari SET Nm_Hari=@n WHERE Id_Hari=@id"
         Else
@@ -396,8 +398,14 @@ Public Class HariRepository
         End If
 
         Using cmd As New MySqlCommand(sql, DbKoneksi)
+            ' Untuk SIMPAN, Id diambil dari fungsi GenerateKode() milik objek Hari
+            If mode = "SIMPAN" Then
+                cmd.Parameters.AddWithValue("@id", h.GenerateKode())
+            Else
+                cmd.Parameters.AddWithValue("@id", h.Id)
+            End If
+
             cmd.Parameters.AddWithValue("@n", h.NamaHari)
-            cmd.Parameters.AddWithValue("@id", h.Id)
             cmd.ExecuteNonQuery()
         End Using
     End Sub
